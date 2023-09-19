@@ -28,47 +28,37 @@
   canvas.height = window.innerHeight;
 
   let t = 0;
+  let offsetX = canvas.width / 2;
+  let offsetY = canvas.height / 2;
   let scale = 20;
   let velocity = 0.05;
-  let lineWidth = 1;
+  let lineWidth = 2;
 
   let noise = new SimplexNoise();
-
-  let lines = Array.from({length: 9}, () => ({
-    offsetX: Math.random() * canvas.width,
-    offsetY: Math.random() * canvas.height,
-    color: `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`,
-    t: Math.random() * 10
-  }));
+  
+  ctx.strokeStyle = 'rgb(0, 0, 0)';
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
 
   function draw() {
     t += velocity;
 
-    lines.forEach(line => {
-      ctx.strokeStyle = line.color;
-      ctx.lineWidth = lineWidth;
-      ctx.beginPath();
+    let x = scale * Math.cos(t);
+    let y = scale * Math.sin(2 * t);
 
-      let x = scale * Math.cos(line.t);
-      let y = scale * Math.sin(2 * line.t);
+    // Using Perlin noise to create a natural, flowing trajectory
+    offsetX += noise.noise2D(t, 0) * 2;
+    offsetY += noise.noise2D(0, t) * 2;
 
-      ctx.moveTo(line.offsetX, line.offsetY);
+    // Keeping the line within the canvas bounds
+    if (offsetX < 0 || offsetX > canvas.width || offsetY < 0 || offsetY > canvas.height) {
+      offsetX = Math.random() * canvas.width;
+      offsetY = Math.random() * canvas.height;
+      ctx.moveTo(offsetX, offsetY);
+    }
 
-      // Using Perlin noise to create a natural, flowing trajectory
-      line.offsetX += noise.noise2D(line.t, 0) * 2;
-      line.offsetY += noise.noise2D(0, line.t) * 2;
-
-      // Keeping the line within the canvas bounds
-      if (line.offsetX < 0 || line.offsetX > canvas.width || line.offsetY < 0 || line.offsetY > canvas.height) {
-        line.offsetX = Math.random() * canvas.width;
-        line.offsetY = Math.random() * canvas.height;
-      }
-
-      ctx.lineTo(line.offsetX + x, line.offsetY + y);
-      ctx.stroke();
-
-      line.t += velocity;
-    });
+    ctx.lineTo(offsetX + x, offsetY + y);
+    ctx.stroke();
 
     requestAnimationFrame(draw);
   }
