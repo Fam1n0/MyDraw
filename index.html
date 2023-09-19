@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: white;
+  }
+  #drawingCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="drawingCanvas" width="800" height="600"></canvas>
+
+<script>
+  const canvas = document.getElementById('drawingCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let t = 0;
+  let scale = 20;
+  let velocity = 0.05;
+  let lineWidth = 1;
+
+  let noise = new SimplexNoise();
+
+  let lines = Array.from({length: 9}, () => ({
+    offsetX: Math.random() * canvas.width,
+    offsetY: Math.random() * canvas.height,
+    color: `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`,
+    t: Math.random() * 10
+  }));
+
+  function draw() {
+    t += velocity;
+
+    lines.forEach(line => {
+      ctx.strokeStyle = line.color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+
+      let x = scale * Math.cos(line.t);
+      let y = scale * Math.sin(2 * line.t);
+
+      ctx.moveTo(line.offsetX, line.offsetY);
+
+      // Using Perlin noise to create a natural, flowing trajectory
+      line.offsetX += noise.noise2D(line.t, 0) * 2;
+      line.offsetY += noise.noise2D(0, line.t) * 2;
+
+      // Keeping the line within the canvas bounds
+      if (line.offsetX < 0 || line.offsetX > canvas.width || line.offsetY < 0 || line.offsetY > canvas.height) {
+        line.offsetX = Math.random() * canvas.width;
+        line.offsetY = Math.random() * canvas.height;
+      }
+
+      ctx.lineTo(line.offsetX + x, line.offsetY + y);
+      ctx.stroke();
+
+      line.t += velocity;
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+</script>
+</body>
+</html>
