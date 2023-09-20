@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: black;
+  }
+  #drawingCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="drawingCanvas" width="800" height="600"></canvas>
+
+<script>
+  const canvas = document.getElementById('drawingCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let t = 0;
+  let offsetX = canvas.width / 2;
+  let offsetY = canvas.height / 2;
+  let scale = 20;
+  let velocity = 0.05;
+  let lineWidth = 2;
+
+  let noise = new SimplexNoise();
+  let points = [];
+  let pointRadius = 5;
+
+  let colorIndex = 0;
+  const colors = ['rgb(173, 216, 230)', 'rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(255, 255, 0)'];
+
+  function resetDrawing() {
+    offsetX = Math.random() * canvas.width;
+    offsetY = Math.random() * canvas.height;
+    ctx.beginPath();
+    ctx.moveTo(offsetX, offsetY);
+    points = [];
+
+    // Cycle to the next color
+    colorIndex = (colorIndex + 1) % colors.length;
+    ctx.strokeStyle = colors[colorIndex];
+    ctx.lineWidth = lineWidth;
+  }
+
+  resetDrawing();
+
+  function draw() {
+    t += velocity;
+
+    let x = scale * Math.cos(t);
+    let y = scale * Math.sin(2 * t);
+    offsetX += noise.noise2D(t, 0) * 2;
+    offsetY += noise.noise2D(0, t) * 2;
+
+    const newPoint = { x: offsetX + x, y: offsetY + y };
+
+    if (!isCrossing(newPoint)) {
+      points.push(newPoint);
+      ctx.lineTo(newPoint.x, newPoint.y);
+      ctx.stroke();
+    } else {
+      resetDrawing();  // Reset drawing to a new random start point to prevent crossing
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  function isCrossing(newPoint) {
+    return points.some(point => Math.hypot(point.x - newPoint.x, point.y - newPoint.y) < pointRadius);
+  }
+
+  draw();
+</script>
+</body>
+</html>
